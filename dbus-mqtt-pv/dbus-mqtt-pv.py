@@ -122,6 +122,7 @@ def on_connect(client, userdata, flags, rc):
     if rc == 0:
         logging.info("MQTT client: Connected to MQTT broker!")
         connected = 1
+        logging.info("Subscribing to topic '" + config["MQTT"]["topic"] + "'")
         client.subscribe(config["MQTT"]["topic"])
     else:
         logging.error("MQTT client: Failed to connect, return code %d\n", rc)
@@ -179,6 +180,32 @@ def on_message(client, userdata, msg):
                     else:
                         logging.error('Received JSON MQTT message does not include a power object in the pv object. Expected at least: {"pv": {"power": 0.0}}')
                         logging.debug("MQTT payload: " + str(msg.payload)[1:])
+                elif "apower" in jsonpayload:
+                    # {
+                    #     "id": 0,
+                    #     "source": "init",
+                    #     "output": true,
+                    #     "apower": 0,
+                    #     "voltage": 230.8,
+                    #     "current": 0,
+                    #     "aenergy": {
+                    #         "total": 9.294,
+                    #         "by_minute": [
+                    #             0,
+                    #             0,
+                    #             0
+                    #         ],
+                    #         "minute_ts": 1732477800
+                    #     },
+                    #     "temperature": {
+                    #         "tC": 55.8,
+                    #         "tF": 132.5
+                    #     }
+                    # }
+                    pv_power = float(jsonpayload["apower"])
+                    pv_current = float(jsonpayload["current"])
+                    pv_voltage = float(jsonpayload["voltage"])
+                    pv_forward = float(jsonpayload["aenergy"]["total"]) / 1000.0
                 else:
                     logging.error('Received JSON MQTT message does not include a pv object. Expected at least: {"pv": {"power": 0.0}}')
                     logging.debug("MQTT payload: " + str(msg.payload)[1:])
