@@ -76,6 +76,7 @@ pv_power = -1
 pv_current = 0
 pv_voltage = 0
 pv_forward = 0
+standby_power = float(config["PV"]["standby"])
 
 pv_L1_power = None
 pv_L1_current = None
@@ -131,7 +132,7 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     try:
 
-        global last_changed, pv_power, pv_current, pv_voltage, pv_forward
+        global last_changed, pv_power, pv_current, pv_voltage, pv_forward, standby_power
         global pv_L1_power, pv_L1_current, pv_L1_voltage, pv_L1_frequency, pv_L1_forward
         global pv_L2_power, pv_L2_current, pv_L2_voltage, pv_L2_frequency, pv_L2_forward
         global pv_L3_power, pv_L3_current, pv_L3_voltage, pv_L3_frequency, pv_L3_forward
@@ -202,8 +203,9 @@ def on_message(client, userdata, msg):
                     #         "tF": 132.5
                     #     }
                     # }
-                    pv_power = float(jsonpayload["apower"])
-                    pv_current = float(jsonpayload["current"])
+                    apower = float(jsonpayload["apower"])
+                    pv_power = apower if apower > standby_power else 0.0
+                    pv_current = float(jsonpayload["current"]) if apower > standby_power else 0.0
                     pv_voltage = float(jsonpayload["voltage"])
                     pv_forward = float(jsonpayload["aenergy"]["total"]) / 1000.0
                 else:
